@@ -16,10 +16,19 @@ class MenuConfig {
   final Future<void> Function({
     required String title,
     required String description,
-    required String imagePath,
-    required String pdfPath,
+    String? imagePath,
+    String? pdfPath,
     required DateTime createdAt,
   }) createItem;
+
+  final Future<void> Function({
+    required int id,
+    required String title,
+    required String description,
+    String? imagePath,
+    String? pdfPath,
+  }) updateItem;
+
 
   final Future<void> Function(int id) deleteItem;
 
@@ -31,6 +40,7 @@ class MenuConfig {
     this.singleItem = false,
     required this.getItems,
     required this.createItem,
+    required this.updateItem,
     required this.deleteItem,
   });
 }

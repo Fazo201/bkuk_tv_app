@@ -76,6 +76,17 @@ class $UnionLawTableTable extends UnionLawTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -84,6 +95,7 @@ class $UnionLawTableTable extends UnionLawTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -135,6 +147,12 @@ class $UnionLawTableTable extends UnionLawTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -168,6 +186,10 @@ class $UnionLawTableTable extends UnionLawTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -185,6 +207,7 @@ class UnionLawTableData extends DataClass
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const UnionLawTableData({
     required this.id,
     required this.title,
@@ -192,6 +215,7 @@ class UnionLawTableData extends DataClass
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -208,6 +232,9 @@ class UnionLawTableData extends DataClass
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -225,6 +252,9 @@ class UnionLawTableData extends DataClass
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -240,6 +270,7 @@ class UnionLawTableData extends DataClass
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -252,6 +283,7 @@ class UnionLawTableData extends DataClass
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -262,6 +294,7 @@ class UnionLawTableData extends DataClass
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => UnionLawTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -269,6 +302,7 @@ class UnionLawTableData extends DataClass
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   UnionLawTableData copyWithCompanion(UnionLawTableCompanion data) {
     return UnionLawTableData(
@@ -280,6 +314,7 @@ class UnionLawTableData extends DataClass
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -291,14 +326,22 @@ class UnionLawTableData extends DataClass
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -308,7 +351,8 @@ class UnionLawTableData extends DataClass
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
@@ -318,6 +362,7 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const UnionLawTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -325,6 +370,7 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   UnionLawTableCompanion.insert({
     this.id = const Value.absent(),
@@ -333,6 +379,7 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<UnionLawTableData> custom({
     Expression<int>? id,
@@ -341,6 +388,7 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -349,6 +397,7 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -359,6 +408,7 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return UnionLawTableCompanion(
       id: id ?? this.id,
@@ -367,6 +417,7 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -391,6 +442,9 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -402,7 +456,8 @@ class UnionLawTableCompanion extends UpdateCompanion<UnionLawTableData> {
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -481,6 +536,17 @@ class $UnionStatuteTableTable extends UnionStatuteTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -489,6 +555,7 @@ class $UnionStatuteTableTable extends UnionStatuteTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -540,6 +607,12 @@ class $UnionStatuteTableTable extends UnionStatuteTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -573,6 +646,10 @@ class $UnionStatuteTableTable extends UnionStatuteTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -590,6 +667,7 @@ class UnionStatuteTableData extends DataClass
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const UnionStatuteTableData({
     required this.id,
     required this.title,
@@ -597,6 +675,7 @@ class UnionStatuteTableData extends DataClass
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -613,6 +692,9 @@ class UnionStatuteTableData extends DataClass
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -630,6 +712,9 @@ class UnionStatuteTableData extends DataClass
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -645,6 +730,7 @@ class UnionStatuteTableData extends DataClass
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -657,6 +743,7 @@ class UnionStatuteTableData extends DataClass
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -667,6 +754,7 @@ class UnionStatuteTableData extends DataClass
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => UnionStatuteTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -674,6 +762,7 @@ class UnionStatuteTableData extends DataClass
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   UnionStatuteTableData copyWithCompanion(UnionStatuteTableCompanion data) {
     return UnionStatuteTableData(
@@ -685,6 +774,7 @@ class UnionStatuteTableData extends DataClass
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -696,14 +786,22 @@ class UnionStatuteTableData extends DataClass
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -713,7 +811,8 @@ class UnionStatuteTableData extends DataClass
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class UnionStatuteTableCompanion
@@ -724,6 +823,7 @@ class UnionStatuteTableCompanion
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const UnionStatuteTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -731,6 +831,7 @@ class UnionStatuteTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   UnionStatuteTableCompanion.insert({
     this.id = const Value.absent(),
@@ -739,6 +840,7 @@ class UnionStatuteTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<UnionStatuteTableData> custom({
     Expression<int>? id,
@@ -747,6 +849,7 @@ class UnionStatuteTableCompanion
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -755,6 +858,7 @@ class UnionStatuteTableCompanion
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -765,6 +869,7 @@ class UnionStatuteTableCompanion
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return UnionStatuteTableCompanion(
       id: id ?? this.id,
@@ -773,6 +878,7 @@ class UnionStatuteTableCompanion
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -797,6 +903,9 @@ class UnionStatuteTableCompanion
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -808,7 +917,8 @@ class UnionStatuteTableCompanion
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -887,6 +997,17 @@ class $CollectiveContractTableTable extends CollectiveContractTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -895,6 +1016,7 @@ class $CollectiveContractTableTable extends CollectiveContractTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -946,6 +1068,12 @@ class $CollectiveContractTableTable extends CollectiveContractTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -982,6 +1110,10 @@ class $CollectiveContractTableTable extends CollectiveContractTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -999,6 +1131,7 @@ class CollectiveContractTableData extends DataClass
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const CollectiveContractTableData({
     required this.id,
     required this.title,
@@ -1006,6 +1139,7 @@ class CollectiveContractTableData extends DataClass
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1022,6 +1156,9 @@ class CollectiveContractTableData extends DataClass
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -1039,6 +1176,9 @@ class CollectiveContractTableData extends DataClass
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -1054,6 +1194,7 @@ class CollectiveContractTableData extends DataClass
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -1066,6 +1207,7 @@ class CollectiveContractTableData extends DataClass
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -1076,6 +1218,7 @@ class CollectiveContractTableData extends DataClass
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => CollectiveContractTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1083,6 +1226,7 @@ class CollectiveContractTableData extends DataClass
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   CollectiveContractTableData copyWithCompanion(
     CollectiveContractTableCompanion data,
@@ -1096,6 +1240,7 @@ class CollectiveContractTableData extends DataClass
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -1107,14 +1252,22 @@ class CollectiveContractTableData extends DataClass
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1124,7 +1277,8 @@ class CollectiveContractTableData extends DataClass
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class CollectiveContractTableCompanion
@@ -1135,6 +1289,7 @@ class CollectiveContractTableCompanion
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const CollectiveContractTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -1142,6 +1297,7 @@ class CollectiveContractTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   CollectiveContractTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1150,6 +1306,7 @@ class CollectiveContractTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<CollectiveContractTableData> custom({
     Expression<int>? id,
@@ -1158,6 +1315,7 @@ class CollectiveContractTableCompanion
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1166,6 +1324,7 @@ class CollectiveContractTableCompanion
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -1176,6 +1335,7 @@ class CollectiveContractTableCompanion
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return CollectiveContractTableCompanion(
       id: id ?? this.id,
@@ -1184,6 +1344,7 @@ class CollectiveContractTableCompanion
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -1208,6 +1369,9 @@ class CollectiveContractTableCompanion
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -1219,7 +1383,8 @@ class CollectiveContractTableCompanion
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -1302,6 +1467,17 @@ class $ApplicationTemplateTableTable extends ApplicationTemplateTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1310,6 +1486,7 @@ class $ApplicationTemplateTableTable extends ApplicationTemplateTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1361,6 +1538,12 @@ class $ApplicationTemplateTableTable extends ApplicationTemplateTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -1397,6 +1580,10 @@ class $ApplicationTemplateTableTable extends ApplicationTemplateTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -1414,6 +1601,7 @@ class ApplicationTemplateTableData extends DataClass
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const ApplicationTemplateTableData({
     required this.id,
     required this.title,
@@ -1421,6 +1609,7 @@ class ApplicationTemplateTableData extends DataClass
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1437,6 +1626,9 @@ class ApplicationTemplateTableData extends DataClass
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -1454,6 +1646,9 @@ class ApplicationTemplateTableData extends DataClass
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -1469,6 +1664,7 @@ class ApplicationTemplateTableData extends DataClass
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -1481,6 +1677,7 @@ class ApplicationTemplateTableData extends DataClass
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -1491,6 +1688,7 @@ class ApplicationTemplateTableData extends DataClass
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => ApplicationTemplateTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1498,6 +1696,7 @@ class ApplicationTemplateTableData extends DataClass
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   ApplicationTemplateTableData copyWithCompanion(
     ApplicationTemplateTableCompanion data,
@@ -1511,6 +1710,7 @@ class ApplicationTemplateTableData extends DataClass
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -1522,14 +1722,22 @@ class ApplicationTemplateTableData extends DataClass
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1539,7 +1747,8 @@ class ApplicationTemplateTableData extends DataClass
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class ApplicationTemplateTableCompanion
@@ -1550,6 +1759,7 @@ class ApplicationTemplateTableCompanion
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const ApplicationTemplateTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -1557,6 +1767,7 @@ class ApplicationTemplateTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   ApplicationTemplateTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1565,6 +1776,7 @@ class ApplicationTemplateTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<ApplicationTemplateTableData> custom({
     Expression<int>? id,
@@ -1573,6 +1785,7 @@ class ApplicationTemplateTableCompanion
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1581,6 +1794,7 @@ class ApplicationTemplateTableCompanion
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -1591,6 +1805,7 @@ class ApplicationTemplateTableCompanion
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return ApplicationTemplateTableCompanion(
       id: id ?? this.id,
@@ -1599,6 +1814,7 @@ class ApplicationTemplateTableCompanion
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -1623,6 +1839,9 @@ class ApplicationTemplateTableCompanion
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -1634,7 +1853,8 @@ class ApplicationTemplateTableCompanion
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -1713,6 +1933,17 @@ class $AnnouncementTableTable extends AnnouncementTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1721,6 +1952,7 @@ class $AnnouncementTableTable extends AnnouncementTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1772,6 +2004,12 @@ class $AnnouncementTableTable extends AnnouncementTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -1805,6 +2043,10 @@ class $AnnouncementTableTable extends AnnouncementTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -1822,6 +2064,7 @@ class AnnouncementTableData extends DataClass
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const AnnouncementTableData({
     required this.id,
     required this.title,
@@ -1829,6 +2072,7 @@ class AnnouncementTableData extends DataClass
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1845,6 +2089,9 @@ class AnnouncementTableData extends DataClass
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -1862,6 +2109,9 @@ class AnnouncementTableData extends DataClass
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -1877,6 +2127,7 @@ class AnnouncementTableData extends DataClass
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -1889,6 +2140,7 @@ class AnnouncementTableData extends DataClass
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -1899,6 +2151,7 @@ class AnnouncementTableData extends DataClass
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => AnnouncementTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1906,6 +2159,7 @@ class AnnouncementTableData extends DataClass
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   AnnouncementTableData copyWithCompanion(AnnouncementTableCompanion data) {
     return AnnouncementTableData(
@@ -1917,6 +2171,7 @@ class AnnouncementTableData extends DataClass
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -1928,14 +2183,22 @@ class AnnouncementTableData extends DataClass
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1945,7 +2208,8 @@ class AnnouncementTableData extends DataClass
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class AnnouncementTableCompanion
@@ -1956,6 +2220,7 @@ class AnnouncementTableCompanion
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const AnnouncementTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -1963,6 +2228,7 @@ class AnnouncementTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   AnnouncementTableCompanion.insert({
     this.id = const Value.absent(),
@@ -1971,6 +2237,7 @@ class AnnouncementTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<AnnouncementTableData> custom({
     Expression<int>? id,
@@ -1979,6 +2246,7 @@ class AnnouncementTableCompanion
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1987,6 +2255,7 @@ class AnnouncementTableCompanion
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -1997,6 +2266,7 @@ class AnnouncementTableCompanion
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return AnnouncementTableCompanion(
       id: id ?? this.id,
@@ -2005,6 +2275,7 @@ class AnnouncementTableCompanion
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -2029,6 +2300,9 @@ class AnnouncementTableCompanion
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -2040,7 +2314,8 @@ class AnnouncementTableCompanion
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2119,6 +2394,17 @@ class $CulturalInfoTableTable extends CulturalInfoTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2127,6 +2413,7 @@ class $CulturalInfoTableTable extends CulturalInfoTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2178,6 +2465,12 @@ class $CulturalInfoTableTable extends CulturalInfoTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2211,6 +2504,10 @@ class $CulturalInfoTableTable extends CulturalInfoTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -2228,6 +2525,7 @@ class CulturalInfoTableData extends DataClass
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const CulturalInfoTableData({
     required this.id,
     required this.title,
@@ -2235,6 +2533,7 @@ class CulturalInfoTableData extends DataClass
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2251,6 +2550,9 @@ class CulturalInfoTableData extends DataClass
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -2268,6 +2570,9 @@ class CulturalInfoTableData extends DataClass
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -2283,6 +2588,7 @@ class CulturalInfoTableData extends DataClass
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -2295,6 +2601,7 @@ class CulturalInfoTableData extends DataClass
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -2305,6 +2612,7 @@ class CulturalInfoTableData extends DataClass
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => CulturalInfoTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -2312,6 +2620,7 @@ class CulturalInfoTableData extends DataClass
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   CulturalInfoTableData copyWithCompanion(CulturalInfoTableCompanion data) {
     return CulturalInfoTableData(
@@ -2323,6 +2632,7 @@ class CulturalInfoTableData extends DataClass
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -2334,14 +2644,22 @@ class CulturalInfoTableData extends DataClass
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2351,7 +2669,8 @@ class CulturalInfoTableData extends DataClass
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class CulturalInfoTableCompanion
@@ -2362,6 +2681,7 @@ class CulturalInfoTableCompanion
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const CulturalInfoTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -2369,6 +2689,7 @@ class CulturalInfoTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   CulturalInfoTableCompanion.insert({
     this.id = const Value.absent(),
@@ -2377,6 +2698,7 @@ class CulturalInfoTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<CulturalInfoTableData> custom({
     Expression<int>? id,
@@ -2385,6 +2707,7 @@ class CulturalInfoTableCompanion
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2393,6 +2716,7 @@ class CulturalInfoTableCompanion
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -2403,6 +2727,7 @@ class CulturalInfoTableCompanion
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return CulturalInfoTableCompanion(
       id: id ?? this.id,
@@ -2411,6 +2736,7 @@ class CulturalInfoTableCompanion
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -2435,6 +2761,9 @@ class CulturalInfoTableCompanion
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -2446,7 +2775,8 @@ class CulturalInfoTableCompanion
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2525,6 +2855,17 @@ class $ResortTableTable extends ResortTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2533,6 +2874,7 @@ class $ResortTableTable extends ResortTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2584,6 +2926,12 @@ class $ResortTableTable extends ResortTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2617,6 +2965,10 @@ class $ResortTableTable extends ResortTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -2633,6 +2985,7 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const ResortTableData({
     required this.id,
     required this.title,
@@ -2640,6 +2993,7 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2656,6 +3010,9 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -2673,6 +3030,9 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -2688,6 +3048,7 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -2700,6 +3061,7 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -2710,6 +3072,7 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => ResortTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -2717,6 +3080,7 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   ResortTableData copyWithCompanion(ResortTableCompanion data) {
     return ResortTableData(
@@ -2728,6 +3092,7 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -2739,14 +3104,22 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2756,7 +3129,8 @@ class ResortTableData extends DataClass implements Insertable<ResortTableData> {
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
@@ -2766,6 +3140,7 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const ResortTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -2773,6 +3148,7 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   ResortTableCompanion.insert({
     this.id = const Value.absent(),
@@ -2781,6 +3157,7 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<ResortTableData> custom({
     Expression<int>? id,
@@ -2789,6 +3166,7 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2797,6 +3175,7 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -2807,6 +3186,7 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return ResortTableCompanion(
       id: id ?? this.id,
@@ -2815,6 +3195,7 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -2839,6 +3220,9 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -2850,7 +3234,8 @@ class ResortTableCompanion extends UpdateCompanion<ResortTableData> {
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2929,6 +3314,17 @@ class $SanatoriumTableTable extends SanatoriumTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2937,6 +3333,7 @@ class $SanatoriumTableTable extends SanatoriumTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2988,6 +3385,12 @@ class $SanatoriumTableTable extends SanatoriumTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -3021,6 +3424,10 @@ class $SanatoriumTableTable extends SanatoriumTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -3038,6 +3445,7 @@ class SanatoriumTableData extends DataClass
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const SanatoriumTableData({
     required this.id,
     required this.title,
@@ -3045,6 +3453,7 @@ class SanatoriumTableData extends DataClass
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3061,6 +3470,9 @@ class SanatoriumTableData extends DataClass
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -3078,6 +3490,9 @@ class SanatoriumTableData extends DataClass
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -3093,6 +3508,7 @@ class SanatoriumTableData extends DataClass
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -3105,6 +3521,7 @@ class SanatoriumTableData extends DataClass
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -3115,6 +3532,7 @@ class SanatoriumTableData extends DataClass
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => SanatoriumTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -3122,6 +3540,7 @@ class SanatoriumTableData extends DataClass
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   SanatoriumTableData copyWithCompanion(SanatoriumTableCompanion data) {
     return SanatoriumTableData(
@@ -3133,6 +3552,7 @@ class SanatoriumTableData extends DataClass
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -3144,14 +3564,22 @@ class SanatoriumTableData extends DataClass
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3161,7 +3589,8 @@ class SanatoriumTableData extends DataClass
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
@@ -3171,6 +3600,7 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const SanatoriumTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -3178,6 +3608,7 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   SanatoriumTableCompanion.insert({
     this.id = const Value.absent(),
@@ -3186,6 +3617,7 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<SanatoriumTableData> custom({
     Expression<int>? id,
@@ -3194,6 +3626,7 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3202,6 +3635,7 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -3212,6 +3646,7 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return SanatoriumTableCompanion(
       id: id ?? this.id,
@@ -3220,6 +3655,7 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -3244,6 +3680,9 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -3255,7 +3694,8 @@ class SanatoriumTableCompanion extends UpdateCompanion<SanatoriumTableData> {
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -3334,6 +3774,17 @@ class $UpcomingPlanTableTable extends UpcomingPlanTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3342,6 +3793,7 @@ class $UpcomingPlanTableTable extends UpcomingPlanTable
     imagePath,
     pdfPath,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3393,6 +3845,12 @@ class $UpcomingPlanTableTable extends UpcomingPlanTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -3426,6 +3884,10 @@ class $UpcomingPlanTableTable extends UpcomingPlanTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -3443,6 +3905,7 @@ class UpcomingPlanTableData extends DataClass
   final String? imagePath;
   final String? pdfPath;
   final DateTime createdAt;
+  final DateTime? updatedAt;
   const UpcomingPlanTableData({
     required this.id,
     required this.title,
@@ -3450,6 +3913,7 @@ class UpcomingPlanTableData extends DataClass
     this.imagePath,
     this.pdfPath,
     required this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3466,6 +3930,9 @@ class UpcomingPlanTableData extends DataClass
       map['pdf_path'] = Variable<String>(pdfPath);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -3483,6 +3950,9 @@ class UpcomingPlanTableData extends DataClass
           ? const Value.absent()
           : Value(pdfPath),
       createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -3498,6 +3968,7 @@ class UpcomingPlanTableData extends DataClass
       imagePath: serializer.fromJson<String?>(json['imagePath']),
       pdfPath: serializer.fromJson<String?>(json['pdfPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -3510,6 +3981,7 @@ class UpcomingPlanTableData extends DataClass
       'imagePath': serializer.toJson<String?>(imagePath),
       'pdfPath': serializer.toJson<String?>(pdfPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -3520,6 +3992,7 @@ class UpcomingPlanTableData extends DataClass
     Value<String?> imagePath = const Value.absent(),
     Value<String?> pdfPath = const Value.absent(),
     DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => UpcomingPlanTableData(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -3527,6 +4000,7 @@ class UpcomingPlanTableData extends DataClass
     imagePath: imagePath.present ? imagePath.value : this.imagePath,
     pdfPath: pdfPath.present ? pdfPath.value : this.pdfPath,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   UpcomingPlanTableData copyWithCompanion(UpcomingPlanTableCompanion data) {
     return UpcomingPlanTableData(
@@ -3538,6 +4012,7 @@ class UpcomingPlanTableData extends DataClass
       imagePath: data.imagePath.present ? data.imagePath.value : this.imagePath,
       pdfPath: data.pdfPath.present ? data.pdfPath.value : this.pdfPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -3549,14 +4024,22 @@ class UpcomingPlanTableData extends DataClass
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, description, imagePath, pdfPath, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    description,
+    imagePath,
+    pdfPath,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3566,7 +4049,8 @@ class UpcomingPlanTableData extends DataClass
           other.description == this.description &&
           other.imagePath == this.imagePath &&
           other.pdfPath == this.pdfPath &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class UpcomingPlanTableCompanion
@@ -3577,6 +4061,7 @@ class UpcomingPlanTableCompanion
   final Value<String?> imagePath;
   final Value<String?> pdfPath;
   final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
   const UpcomingPlanTableCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
@@ -3584,6 +4069,7 @@ class UpcomingPlanTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   UpcomingPlanTableCompanion.insert({
     this.id = const Value.absent(),
@@ -3592,6 +4078,7 @@ class UpcomingPlanTableCompanion
     this.imagePath = const Value.absent(),
     this.pdfPath = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title);
   static Insertable<UpcomingPlanTableData> custom({
     Expression<int>? id,
@@ -3600,6 +4087,7 @@ class UpcomingPlanTableCompanion
     Expression<String>? imagePath,
     Expression<String>? pdfPath,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3608,6 +4096,7 @@ class UpcomingPlanTableCompanion
       if (imagePath != null) 'image_path': imagePath,
       if (pdfPath != null) 'pdf_path': pdfPath,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -3618,6 +4107,7 @@ class UpcomingPlanTableCompanion
     Value<String?>? imagePath,
     Value<String?>? pdfPath,
     Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
   }) {
     return UpcomingPlanTableCompanion(
       id: id ?? this.id,
@@ -3626,6 +4116,7 @@ class UpcomingPlanTableCompanion
       imagePath: imagePath ?? this.imagePath,
       pdfPath: pdfPath ?? this.pdfPath,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -3650,6 +4141,9 @@ class UpcomingPlanTableCompanion
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -3661,7 +4155,8 @@ class UpcomingPlanTableCompanion
           ..write('description: $description, ')
           ..write('imagePath: $imagePath, ')
           ..write('pdfPath: $pdfPath, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -3764,6 +4259,17 @@ class $BirthdayTableTable extends BirthdayTable
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3774,6 +4280,7 @@ class $BirthdayTableTable extends BirthdayTable
     birthDate,
     imagePath,
     birthdayImagePath,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3845,6 +4352,12 @@ class $BirthdayTableTable extends BirthdayTable
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -3886,6 +4399,10 @@ class $BirthdayTableTable extends BirthdayTable
         DriftSqlType.string,
         data['${effectivePrefix}birthday_image_path'],
       ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -3905,6 +4422,7 @@ class BirthdayTableData extends DataClass
   final DateTime birthDate;
   final String? imagePath;
   final String? birthdayImagePath;
+  final DateTime? updatedAt;
   const BirthdayTableData({
     required this.id,
     required this.firstName,
@@ -3914,6 +4432,7 @@ class BirthdayTableData extends DataClass
     required this.birthDate,
     this.imagePath,
     this.birthdayImagePath,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3929,6 +4448,9 @@ class BirthdayTableData extends DataClass
     }
     if (!nullToAbsent || birthdayImagePath != null) {
       map['birthday_image_path'] = Variable<String>(birthdayImagePath);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
     }
     return map;
   }
@@ -3947,6 +4469,9 @@ class BirthdayTableData extends DataClass
       birthdayImagePath: birthdayImagePath == null && nullToAbsent
           ? const Value.absent()
           : Value(birthdayImagePath),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -3966,6 +4491,7 @@ class BirthdayTableData extends DataClass
       birthdayImagePath: serializer.fromJson<String?>(
         json['birthdayImagePath'],
       ),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -3980,6 +4506,7 @@ class BirthdayTableData extends DataClass
       'birthDate': serializer.toJson<DateTime>(birthDate),
       'imagePath': serializer.toJson<String?>(imagePath),
       'birthdayImagePath': serializer.toJson<String?>(birthdayImagePath),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -3992,6 +4519,7 @@ class BirthdayTableData extends DataClass
     DateTime? birthDate,
     Value<String?> imagePath = const Value.absent(),
     Value<String?> birthdayImagePath = const Value.absent(),
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => BirthdayTableData(
     id: id ?? this.id,
     firstName: firstName ?? this.firstName,
@@ -4003,6 +4531,7 @@ class BirthdayTableData extends DataClass
     birthdayImagePath: birthdayImagePath.present
         ? birthdayImagePath.value
         : this.birthdayImagePath,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   BirthdayTableData copyWithCompanion(BirthdayTableCompanion data) {
     return BirthdayTableData(
@@ -4020,6 +4549,7 @@ class BirthdayTableData extends DataClass
       birthdayImagePath: data.birthdayImagePath.present
           ? data.birthdayImagePath.value
           : this.birthdayImagePath,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -4033,7 +4563,8 @@ class BirthdayTableData extends DataClass
           ..write('department: $department, ')
           ..write('birthDate: $birthDate, ')
           ..write('imagePath: $imagePath, ')
-          ..write('birthdayImagePath: $birthdayImagePath')
+          ..write('birthdayImagePath: $birthdayImagePath, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -4048,6 +4579,7 @@ class BirthdayTableData extends DataClass
     birthDate,
     imagePath,
     birthdayImagePath,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -4060,7 +4592,8 @@ class BirthdayTableData extends DataClass
           other.department == this.department &&
           other.birthDate == this.birthDate &&
           other.imagePath == this.imagePath &&
-          other.birthdayImagePath == this.birthdayImagePath);
+          other.birthdayImagePath == this.birthdayImagePath &&
+          other.updatedAt == this.updatedAt);
 }
 
 class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
@@ -4072,6 +4605,7 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
   final Value<DateTime> birthDate;
   final Value<String?> imagePath;
   final Value<String?> birthdayImagePath;
+  final Value<DateTime?> updatedAt;
   const BirthdayTableCompanion({
     this.id = const Value.absent(),
     this.firstName = const Value.absent(),
@@ -4081,6 +4615,7 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
     this.birthDate = const Value.absent(),
     this.imagePath = const Value.absent(),
     this.birthdayImagePath = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   BirthdayTableCompanion.insert({
     this.id = const Value.absent(),
@@ -4091,6 +4626,7 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
     required DateTime birthDate,
     this.imagePath = const Value.absent(),
     this.birthdayImagePath = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : firstName = Value(firstName),
        lastName = Value(lastName),
        middleName = Value(middleName),
@@ -4105,6 +4641,7 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
     Expression<DateTime>? birthDate,
     Expression<String>? imagePath,
     Expression<String>? birthdayImagePath,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4115,6 +4652,7 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
       if (birthDate != null) 'birth_date': birthDate,
       if (imagePath != null) 'image_path': imagePath,
       if (birthdayImagePath != null) 'birthday_image_path': birthdayImagePath,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -4127,6 +4665,7 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
     Value<DateTime>? birthDate,
     Value<String?>? imagePath,
     Value<String?>? birthdayImagePath,
+    Value<DateTime?>? updatedAt,
   }) {
     return BirthdayTableCompanion(
       id: id ?? this.id,
@@ -4137,6 +4676,7 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
       birthDate: birthDate ?? this.birthDate,
       imagePath: imagePath ?? this.imagePath,
       birthdayImagePath: birthdayImagePath ?? this.birthdayImagePath,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -4167,6 +4707,9 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
     if (birthdayImagePath.present) {
       map['birthday_image_path'] = Variable<String>(birthdayImagePath.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -4180,7 +4723,8 @@ class BirthdayTableCompanion extends UpdateCompanion<BirthdayTableData> {
           ..write('department: $department, ')
           ..write('birthDate: $birthDate, ')
           ..write('imagePath: $imagePath, ')
-          ..write('birthdayImagePath: $birthdayImagePath')
+          ..write('birthdayImagePath: $birthdayImagePath, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -4255,6 +4799,7 @@ typedef $$UnionLawTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$UnionLawTableTableUpdateCompanionBuilder =
     UnionLawTableCompanion Function({
@@ -4264,6 +4809,7 @@ typedef $$UnionLawTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$UnionLawTableTableFilterComposer
@@ -4302,6 +4848,11 @@ class $$UnionLawTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4344,6 +4895,11 @@ class $$UnionLawTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UnionLawTableTableAnnotationComposer
@@ -4374,6 +4930,9 @@ class $$UnionLawTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$UnionLawTableTableTableManager
@@ -4417,6 +4976,7 @@ class $$UnionLawTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => UnionLawTableCompanion(
                 id: id,
                 title: title,
@@ -4424,6 +4984,7 @@ class $$UnionLawTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -4433,6 +4994,7 @@ class $$UnionLawTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => UnionLawTableCompanion.insert(
                 id: id,
                 title: title,
@@ -4440,6 +5002,7 @@ class $$UnionLawTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -4474,6 +5037,7 @@ typedef $$UnionStatuteTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$UnionStatuteTableTableUpdateCompanionBuilder =
     UnionStatuteTableCompanion Function({
@@ -4483,6 +5047,7 @@ typedef $$UnionStatuteTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$UnionStatuteTableTableFilterComposer
@@ -4521,6 +5086,11 @@ class $$UnionStatuteTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4563,6 +5133,11 @@ class $$UnionStatuteTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UnionStatuteTableTableAnnotationComposer
@@ -4593,6 +5168,9 @@ class $$UnionStatuteTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$UnionStatuteTableTableTableManager
@@ -4641,6 +5219,7 @@ class $$UnionStatuteTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => UnionStatuteTableCompanion(
                 id: id,
                 title: title,
@@ -4648,6 +5227,7 @@ class $$UnionStatuteTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -4657,6 +5237,7 @@ class $$UnionStatuteTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => UnionStatuteTableCompanion.insert(
                 id: id,
                 title: title,
@@ -4664,6 +5245,7 @@ class $$UnionStatuteTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -4702,6 +5284,7 @@ typedef $$CollectiveContractTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$CollectiveContractTableTableUpdateCompanionBuilder =
     CollectiveContractTableCompanion Function({
@@ -4711,6 +5294,7 @@ typedef $$CollectiveContractTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$CollectiveContractTableTableFilterComposer
@@ -4749,6 +5333,11 @@ class $$CollectiveContractTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4791,6 +5380,11 @@ class $$CollectiveContractTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CollectiveContractTableTableAnnotationComposer
@@ -4821,6 +5415,9 @@ class $$CollectiveContractTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$CollectiveContractTableTableTableManager
@@ -4875,6 +5472,7 @@ class $$CollectiveContractTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => CollectiveContractTableCompanion(
                 id: id,
                 title: title,
@@ -4882,6 +5480,7 @@ class $$CollectiveContractTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -4891,6 +5490,7 @@ class $$CollectiveContractTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => CollectiveContractTableCompanion.insert(
                 id: id,
                 title: title,
@@ -4898,6 +5498,7 @@ class $$CollectiveContractTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -4936,6 +5537,7 @@ typedef $$ApplicationTemplateTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$ApplicationTemplateTableTableUpdateCompanionBuilder =
     ApplicationTemplateTableCompanion Function({
@@ -4945,6 +5547,7 @@ typedef $$ApplicationTemplateTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$ApplicationTemplateTableTableFilterComposer
@@ -4983,6 +5586,11 @@ class $$ApplicationTemplateTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5025,6 +5633,11 @@ class $$ApplicationTemplateTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ApplicationTemplateTableTableAnnotationComposer
@@ -5055,6 +5668,9 @@ class $$ApplicationTemplateTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$ApplicationTemplateTableTableTableManager
@@ -5109,6 +5725,7 @@ class $$ApplicationTemplateTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => ApplicationTemplateTableCompanion(
                 id: id,
                 title: title,
@@ -5116,6 +5733,7 @@ class $$ApplicationTemplateTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -5125,6 +5743,7 @@ class $$ApplicationTemplateTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => ApplicationTemplateTableCompanion.insert(
                 id: id,
                 title: title,
@@ -5132,6 +5751,7 @@ class $$ApplicationTemplateTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -5170,6 +5790,7 @@ typedef $$AnnouncementTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$AnnouncementTableTableUpdateCompanionBuilder =
     AnnouncementTableCompanion Function({
@@ -5179,6 +5800,7 @@ typedef $$AnnouncementTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$AnnouncementTableTableFilterComposer
@@ -5217,6 +5839,11 @@ class $$AnnouncementTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5259,6 +5886,11 @@ class $$AnnouncementTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AnnouncementTableTableAnnotationComposer
@@ -5289,6 +5921,9 @@ class $$AnnouncementTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$AnnouncementTableTableTableManager
@@ -5337,6 +5972,7 @@ class $$AnnouncementTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => AnnouncementTableCompanion(
                 id: id,
                 title: title,
@@ -5344,6 +5980,7 @@ class $$AnnouncementTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -5353,6 +5990,7 @@ class $$AnnouncementTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => AnnouncementTableCompanion.insert(
                 id: id,
                 title: title,
@@ -5360,6 +5998,7 @@ class $$AnnouncementTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -5398,6 +6037,7 @@ typedef $$CulturalInfoTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$CulturalInfoTableTableUpdateCompanionBuilder =
     CulturalInfoTableCompanion Function({
@@ -5407,6 +6047,7 @@ typedef $$CulturalInfoTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$CulturalInfoTableTableFilterComposer
@@ -5445,6 +6086,11 @@ class $$CulturalInfoTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5487,6 +6133,11 @@ class $$CulturalInfoTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CulturalInfoTableTableAnnotationComposer
@@ -5517,6 +6168,9 @@ class $$CulturalInfoTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$CulturalInfoTableTableTableManager
@@ -5565,6 +6219,7 @@ class $$CulturalInfoTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => CulturalInfoTableCompanion(
                 id: id,
                 title: title,
@@ -5572,6 +6227,7 @@ class $$CulturalInfoTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -5581,6 +6237,7 @@ class $$CulturalInfoTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => CulturalInfoTableCompanion.insert(
                 id: id,
                 title: title,
@@ -5588,6 +6245,7 @@ class $$CulturalInfoTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -5626,6 +6284,7 @@ typedef $$ResortTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$ResortTableTableUpdateCompanionBuilder =
     ResortTableCompanion Function({
@@ -5635,6 +6294,7 @@ typedef $$ResortTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$ResortTableTableFilterComposer
@@ -5673,6 +6333,11 @@ class $$ResortTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5715,6 +6380,11 @@ class $$ResortTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ResortTableTableAnnotationComposer
@@ -5745,6 +6415,9 @@ class $$ResortTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$ResortTableTableTableManager
@@ -5784,6 +6457,7 @@ class $$ResortTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => ResortTableCompanion(
                 id: id,
                 title: title,
@@ -5791,6 +6465,7 @@ class $$ResortTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -5800,6 +6475,7 @@ class $$ResortTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => ResortTableCompanion.insert(
                 id: id,
                 title: title,
@@ -5807,6 +6483,7 @@ class $$ResortTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -5841,6 +6518,7 @@ typedef $$SanatoriumTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$SanatoriumTableTableUpdateCompanionBuilder =
     SanatoriumTableCompanion Function({
@@ -5850,6 +6528,7 @@ typedef $$SanatoriumTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$SanatoriumTableTableFilterComposer
@@ -5888,6 +6567,11 @@ class $$SanatoriumTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5930,6 +6614,11 @@ class $$SanatoriumTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SanatoriumTableTableAnnotationComposer
@@ -5960,6 +6649,9 @@ class $$SanatoriumTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$SanatoriumTableTableTableManager
@@ -6005,6 +6697,7 @@ class $$SanatoriumTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => SanatoriumTableCompanion(
                 id: id,
                 title: title,
@@ -6012,6 +6705,7 @@ class $$SanatoriumTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -6021,6 +6715,7 @@ class $$SanatoriumTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => SanatoriumTableCompanion.insert(
                 id: id,
                 title: title,
@@ -6028,6 +6723,7 @@ class $$SanatoriumTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -6066,6 +6762,7 @@ typedef $$UpcomingPlanTableTableCreateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 typedef $$UpcomingPlanTableTableUpdateCompanionBuilder =
     UpcomingPlanTableCompanion Function({
@@ -6075,6 +6772,7 @@ typedef $$UpcomingPlanTableTableUpdateCompanionBuilder =
       Value<String?> imagePath,
       Value<String?> pdfPath,
       Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
     });
 
 class $$UpcomingPlanTableTableFilterComposer
@@ -6113,6 +6811,11 @@ class $$UpcomingPlanTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6155,6 +6858,11 @@ class $$UpcomingPlanTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$UpcomingPlanTableTableAnnotationComposer
@@ -6185,6 +6893,9 @@ class $$UpcomingPlanTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$UpcomingPlanTableTableTableManager
@@ -6233,6 +6944,7 @@ class $$UpcomingPlanTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => UpcomingPlanTableCompanion(
                 id: id,
                 title: title,
@@ -6240,6 +6952,7 @@ class $$UpcomingPlanTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -6249,6 +6962,7 @@ class $$UpcomingPlanTableTableTableManager
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> pdfPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => UpcomingPlanTableCompanion.insert(
                 id: id,
                 title: title,
@@ -6256,6 +6970,7 @@ class $$UpcomingPlanTableTableTableManager
                 imagePath: imagePath,
                 pdfPath: pdfPath,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -6296,6 +7011,7 @@ typedef $$BirthdayTableTableCreateCompanionBuilder =
       required DateTime birthDate,
       Value<String?> imagePath,
       Value<String?> birthdayImagePath,
+      Value<DateTime?> updatedAt,
     });
 typedef $$BirthdayTableTableUpdateCompanionBuilder =
     BirthdayTableCompanion Function({
@@ -6307,6 +7023,7 @@ typedef $$BirthdayTableTableUpdateCompanionBuilder =
       Value<DateTime> birthDate,
       Value<String?> imagePath,
       Value<String?> birthdayImagePath,
+      Value<DateTime?> updatedAt,
     });
 
 class $$BirthdayTableTableFilterComposer
@@ -6355,6 +7072,11 @@ class $$BirthdayTableTableFilterComposer
 
   ColumnFilters<String> get birthdayImagePath => $composableBuilder(
     column: $table.birthdayImagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6407,6 +7129,11 @@ class $$BirthdayTableTableOrderingComposer
     column: $table.birthdayImagePath,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$BirthdayTableTableAnnotationComposer
@@ -6447,6 +7174,9 @@ class $$BirthdayTableTableAnnotationComposer
     column: $table.birthdayImagePath,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$BirthdayTableTableTableManager
@@ -6492,6 +7222,7 @@ class $$BirthdayTableTableTableManager
                 Value<DateTime> birthDate = const Value.absent(),
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> birthdayImagePath = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => BirthdayTableCompanion(
                 id: id,
                 firstName: firstName,
@@ -6501,6 +7232,7 @@ class $$BirthdayTableTableTableManager
                 birthDate: birthDate,
                 imagePath: imagePath,
                 birthdayImagePath: birthdayImagePath,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -6512,6 +7244,7 @@ class $$BirthdayTableTableTableManager
                 required DateTime birthDate,
                 Value<String?> imagePath = const Value.absent(),
                 Value<String?> birthdayImagePath = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
               }) => BirthdayTableCompanion.insert(
                 id: id,
                 firstName: firstName,
@@ -6521,6 +7254,7 @@ class $$BirthdayTableTableTableManager
                 birthDate: birthDate,
                 imagePath: imagePath,
                 birthdayImagePath: birthdayImagePath,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

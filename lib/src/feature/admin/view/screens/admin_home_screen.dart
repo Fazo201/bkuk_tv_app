@@ -5,6 +5,7 @@ import 'package:bkuk_tv_app/src/feature/admin/view/widgets/admin_create_birthday
 import 'package:bkuk_tv_app/src/feature/admin/view/widgets/admin_custom_card.dart';
 import 'package:bkuk_tv_app/src/feature/admin/view/widgets/admin_menu_widget.dart';
 import 'package:bkuk_tv_app/src/feature/admin/view/widgets/create_dialog.dart';
+import 'package:bkuk_tv_app/src/feature/admin/view/widgets/update_dialog.dart';
 import 'package:bkuk_tv_app/src/feature/widgets/custom_divider.dart';
 import 'package:flutter/material.dart';
 
@@ -79,8 +80,8 @@ class AdminHomeScreen extends ConsumerWidget {
                           backgroundColor: const Color(0xFF1B4677),
                           child: const Icon(Icons.add, color: Color(0xFFE7B96E)),
                         )
-                        else
-                        SizedBox(width: 56.w, height: 56.h), 
+                      else
+                        SizedBox(width: 56.w, height: 56.h),
                     ],
                   ),
                   Row(
@@ -125,6 +126,19 @@ class AdminHomeScreen extends ConsumerWidget {
                           description: item.description,
                           imagePath: item.imagePath,
                           date: item.createdAt.toString().split(' ').first,
+                          onUpdate: () {
+                            notifier.resetSelectedFiles();
+                            showDialog(
+                              context: context,
+                              builder: (_) => UpdateDialog(
+                                itemId: item.id,
+                                initialTitle: item.title,
+                                initialDescription: item.description,
+                                initialImagePath: item.imagePath,
+                                initialPdfPath: item.pdfPath, // ← янги
+                              ),
+                            );
+                          },
                           onDelete: () async {
                             await notifier.deleteItem(item.id);
                             if (context.mounted) {

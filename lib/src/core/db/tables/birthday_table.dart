@@ -9,4 +9,6 @@ class BirthdayTable extends Table {
   DateTimeColumn get birthDate => dateTime()();
   TextColumn get imagePath => text().nullable()();
   TextColumn get birthdayImagePath => text().nullable()();
+
+  DateTimeColumn get updatedAt => dateTime().nullable()();
 }

@@ -110,6 +110,12 @@ class _HomeDetailScreenState extends ConsumerState<HomeDetailScreen> {
   Widget _buildContent(HomeState state, String? path) {
     final menu = getMenuById(state.selectedMenuId);
 
+    if (state.items.isEmpty||state.items.first.pdfPath == null) {
+      return const Center(
+        child: Text("Ma'lumot yo'q", style: TextStyle(color: Colors.white54)),
+      );
+    }
+
     if (menu?.singleItem == true) {
       final item = state.items.first;
 

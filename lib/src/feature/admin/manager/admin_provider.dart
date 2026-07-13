@@ -19,14 +19,12 @@ final FileStorageService storageService = FileStorageService();
 /// NOTIFIER
 class AdminNotifier extends StateNotifier<AdminState> {
   AdminNotifier() : super(const AdminState()) {
-    /// DEFAULT MENU
     changeMenu(1);
   }
 
   /// PICK PDF
   Future<void> pickPdf() async {
     final result = await FilePicker.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
-
     if (result != null) {
       state = state.copyWith(selectedPdf: File(result.files.single.path!));
     }
@@ -35,30 +33,30 @@ class AdminNotifier extends StateNotifier<AdminState> {
   /// PICK IMAGE
   Future<void> pickImage() async {
     final result = await FilePicker.pickFiles(type: FileType.image);
-
     if (result != null) {
       state = state.copyWith(selectedImage: File(result.files.single.path!));
     }
   }
 
-    /// PICK BIRTHDAY IMAGE
+  /// PICK BIRTHDAY IMAGE
   Future<void> pickBirthdayImage() async {
     final result = await FilePicker.pickFiles(type: FileType.image);
-
     if (result != null) {
       state = state.copyWith(selectedBirthdayImage: File(result.files.single.path!));
     }
   }
 
+  /// CLEAR
+  void clearImage() => state = state.copyWith(selectedImage: null);
+  void clearPdf() => state = state.copyWith(selectedPdf: null);
+  void clearBirthdayImage() => state = state.copyWith(selectedBirthdayImage: null);
+  void resetSelectedFiles() => state = state.copyWith(selectedImage: null, selectedPdf: null);
+
   /// CHANGE MENU
   Future<void> changeMenu(int menuId) async {
     state = state.copyWith(selectedMenuId: menuId, isLoading: true);
-
-    final menu = getMenuById(menuId);
-
-    final data = await menu?.getItems();
-
-    state = state.copyWith(items: data, isLoading: false);
+    final data = await getMenuById(menuId)?.getItems();
+    state = state.copyWith(items: data ?? [], isLoading: false);
   }
 
   /// CREATE ITEM
@@ -68,30 +66,37 @@ class AdminNotifier extends StateNotifier<AdminState> {
     File? selectedImage,
     File? selectedPdf,
   }) async {
-    // selectedImage ham tekshirilishi kerak
-    if (title.isEmpty || description.isEmpty || selectedImage == null || selectedPdf == null) {
+    if (title.isEmpty || description.isEmpty) {
       return "Barcha maydonlarni to'ldiring!";
     }
 
     state = state.copyWith(isLoading: true);
 
     final menu = getMenuById(state.selectedMenuId);
-
-    /// SAVE IMAGE
-    final savedImagePath = await storageService.saveFile(file: selectedImage, folderName: menu!.folder);
-    if (savedImagePath == null) {
+    if (menu == null) {
       state = state.copyWith(isLoading: false);
-      return "Rasm saqlanmadi!";
+      return "Menyu topilmadi!";
     }
 
-    /// SAVE PDF
-    final savedPdfPath = await storageService.saveFile(file: selectedPdf, folderName: menu.folder);
-    if (savedPdfPath == null) {
-      state = state.copyWith(isLoading: false);
-      return "PDF saqlanmadi!";
+    String? savedImagePath;
+    String? savedPdfPath;
+
+    if (selectedImage != null) {
+      savedImagePath = await storageService.saveFile(file: selectedImage, folderName: menu.folder);
+      if (savedImagePath == null) {
+        state = state.copyWith(isLoading: false);
+        return "Rasm saqlanmadi!";
+      }
     }
 
-    /// CREATE DB ITEM
+    if (selectedPdf != null) {
+      savedPdfPath = await storageService.saveFile(file: selectedPdf, folderName: menu.folder);
+      if (savedPdfPath == null) {
+        state = state.copyWith(isLoading: false);
+        return "PDF saqlanmadi!";
+      }
+    }
+
     await menu.createItem(
       title: title,
       description: description,
@@ -100,10 +105,89 @@ class AdminNotifier extends StateNotifier<AdminState> {
       createdAt: DateTime.now(),
     );
 
-    /// REFRESH
     await changeMenu(state.selectedMenuId);
 
-    // selectedImage ham null ga qaytarilishi kerak
+    state = state.copyWith(isLoading: false, selectedImage: null, selectedPdf: null);
+
+    return null;
+  }
+
+  /// UPDATE ITEM
+  Future<String?> updateItem({
+    required int id,
+    required String title,
+    required String description,
+    File? newImage,
+    File? newPdf,
+    bool removeImage = false,
+    bool removePdf = false,
+  }) async {
+    if (title.isEmpty || description.isEmpty) {
+      return "Sarlavha va tavsifni to'ldiring!";
+    }
+
+    state = state.copyWith(isLoading: true);
+
+    final menu = getMenuById(state.selectedMenuId);
+    if (menu == null) {
+      state = state.copyWith(isLoading: false);
+      return "Menyu topilmadi!";
+    }
+
+    final oldItem = state.items.firstWhereOrNull((e) => e.id == id);
+
+    // ── RASM ──────────────────────────────────────────────────────
+    String? finalImagePath = oldItem?.imagePath;
+
+    if (newImage != null) {
+      // Yangi rasm tanlangan — eskisini o'chirib, yangisini saqlaymiz
+      if (oldItem?.imagePath != null) {
+        await storageService.deleteFile(filePath: oldItem!.imagePath);
+      }
+      finalImagePath = await storageService.saveFile(file: newImage, folderName: menu.folder);
+      if (finalImagePath == null) {
+        state = state.copyWith(isLoading: false);
+        return "Rasm saqlanmadi!";
+      }
+    } else if (removeImage) {
+      // Foydalanuvchi rasmni o'chirishni tanlagan
+      if (oldItem?.imagePath != null) {
+        await storageService.deleteFile(filePath: oldItem!.imagePath);
+      }
+      finalImagePath = null;
+    }
+    // else — na yangi, na o'chirish → finalImagePath = oldItem?.imagePath (o'zgarmaydi)
+
+    // ── PDF ───────────────────────────────────────────────────────
+    String? finalPdfPath = oldItem?.pdfPath;
+
+    if (newPdf != null) {
+      if (oldItem?.pdfPath != null) {
+        await storageService.deleteFile(filePath: oldItem!.pdfPath);
+      }
+      finalPdfPath = await storageService.saveFile(file: newPdf, folderName: menu.folder);
+      if (finalPdfPath == null) {
+        state = state.copyWith(isLoading: false);
+        return "PDF saqlanmadi!";
+      }
+    } else if (removePdf) {
+      if (oldItem?.pdfPath != null) {
+        await storageService.deleteFile(filePath: oldItem!.pdfPath);
+      }
+      finalPdfPath = null;
+    }
+
+    // ── DB YANGILASH ──────────────────────────────────────────────
+    await menu.updateItem(
+      id: id,
+      title: title,
+      description: description,
+      imagePath: finalImagePath,
+      pdfPath: finalPdfPath,
+    );
+
+    await changeMenu(state.selectedMenuId);
+
     state = state.copyWith(isLoading: false, selectedImage: null, selectedPdf: null);
 
     return null;
@@ -112,21 +196,17 @@ class AdminNotifier extends StateNotifier<AdminState> {
   /// DELETE ITEM
   Future<void> deleteItem(int id) async {
     final menu = getMenuById(state.selectedMenuId);
+    if (menu == null) return;
 
-    final item = state.items.cast<dynamic>().firstWhere((e) => e.id == id, orElse: () => null);
+    final item = state.items.firstWhereOrNull((e) => e.id == id);
 
     if (item != null) {
-      await storageService.deleteFile(filePath: item.imagePath);
-      await storageService.deleteFile(filePath: item.pdfPath);
+      if (item.imagePath != null) await storageService.deleteFile(filePath: item.imagePath);
+      if (item.pdfPath != null) await storageService.deleteFile(filePath: item.pdfPath);
     }
 
-    await menu!.deleteItem(id);
-
+    await menu.deleteItem(id);
     await changeMenu(state.selectedMenuId);
-  }
-
-  void resetSelectedFiles() {
-    state = state.copyWith(selectedImage: null, selectedPdf: null);
   }
 
   /// CREATE BIRTHDAY
@@ -150,21 +230,18 @@ class AdminNotifier extends StateNotifier<AdminState> {
 
     state = state.copyWith(isLoading: true);
 
-    /// SAVE IMAGE
     final savedImagePath = await storageService.saveFile(file: selectedImage, folderName: "birthdays");
     if (savedImagePath == null) {
       state = state.copyWith(isLoading: false);
       return "Rasm saqlanmadi!";
     }
 
-    /// SAVE BIRTHDAY IMAGE
     final savedBirthdayImagePath = await storageService.saveFile(file: selectedBirthdayImage, folderName: 'birthdays');
     if (savedBirthdayImagePath == null) {
       state = state.copyWith(isLoading: false);
       return "Tug'ilgan kun rasmi saqlanmadi!";
     }
 
-    /// CREATE DB ITEM
     await repo.addBirthday(
       firstName: firstName,
       lastName: lastName,
@@ -198,5 +275,15 @@ class AdminNotifier extends StateNotifier<AdminState> {
     state = state.copyWith(selectedMenuId: 999, isLoading: true);
     final items = await repo.getAllBirthdays();
     state = state.copyWith(birthdayItems: items, isLoading: false);
+  }
+}
+
+// List<dynamic> uchun firstWhereOrNull extension
+extension _FirstWhereOrNull on List<dynamic> {
+  dynamic firstWhereOrNull(bool Function(dynamic) test) {
+    for (final e in this) {
+      if (test(e)) return e;
+    }
+    return null;
   }
 }

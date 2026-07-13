@@ -12,4 +12,6 @@ class CollectiveContractTable extends Table {
   TextColumn get pdfPath => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  DateTimeColumn get updatedAt => dateTime().nullable()();
 }
